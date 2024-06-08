@@ -1,0 +1,82 @@
+openapi: 3.0.0
+info:
+  version: 0.1.0
+  title: SIWE Authentication Server
+servers:
+  - description: Local environment
+    url: http://localhost:8081
+tags:
+  - name: Authentication
+    description: Endpoints for authenticating users.
+paths:
+  /nonce:
+    get:
+      summary: Get a nonce for a sign in request.
+      tags: [Authentication]
+      responses:
+        200:
+          description: Nonce has been created.
+          content:
+            application/json:
+              schema:
+                type: string
+        500:
+          description: Error creating a nonce.
+  /sign_in:
+    post:
+      summary: Signs the user in, creating and returning a JWT.
+      tags: [Authentication]
+      requestBody:
+        description: The Sign in With Ethereum message and signature.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SigninData"
+      responses:
+        200:
+          description: Successfully signed in.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JWTPair"
+        400:
+          description: Bad Request - nonce is invalid or does not match nonce in signature.
+        500:
+          description: Error creating a nonce.
+  /refresh:
+    post:
+      summary: Checks a provided refresh token, returns a new access token and refresh token.
+      tags: [Authentication]
+      requestBody:
+        description: The user's current refresh token.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: string
+      responses:
+        200:
+          description: Successfully refreshed tokens.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JWTPair"
+        400:
+          description: Bad Request - refresh token provided is not valid.
+        500:
+          description: Error refreshing tokens.
+components:
+  schemas:
+    JWTPair:
+      description: A JSON object containing two string fields, access_token and refresh_token.
+      type: string
+    SigninData:
+      description: A JSON object containing two string fields, a Sign in With Ethereum message and signature. The nonce found in the decoded signature should match the nonce in the message.
+  securitySchemes:
+    JWTAuthorization:
+      name: Authorization
+      description: JWT Bearer Token
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
