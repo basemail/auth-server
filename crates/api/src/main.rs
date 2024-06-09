@@ -12,7 +12,6 @@ use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
 
 mod auth;
 mod config;
-mod database;
 mod routes;
 mod utils;
 

@@ -1,3 +1,5 @@
 .env
 
 /target
+
+/crates/admin/config.toml

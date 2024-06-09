@@ -1,0 +1,23 @@
+[package]
+name = "admin"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+# lib
+database.workspace = true
+
+# global
+clap.workspace = true
+dotenvy.workspace = true
+ethers.workspace = true
+http.workspace = true
+mongodb.workspace = true
+serde.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+# local
+toml = "0.5"

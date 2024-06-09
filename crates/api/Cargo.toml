@@ -1,0 +1,34 @@
+[package]
+name = "api"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+# lib
+database.workspace = true
+
+# global
+clap.workspace = true
+dotenvy.workspace = true
+ethers.workspace = true
+http.workspace = true
+mongodb.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+tracing-log.workspace = true
+tracing-subscriber.workspace = true
+
+# local
+actix-cors = "0.6.4"
+actix-web = { version = "^4", features = ["openssl"] }
+chrono = "0.4.26"
+futures = "0.3.28"
+jsonwebtoken = "8.3.0"
+mime = "0.3.17"
+siwe = { version = "0.6.0", features = ["ethers"] }
+tracing-actix-web = "0.7.6"
+uuid = "1.4.1"
+url = "^2.3.1"

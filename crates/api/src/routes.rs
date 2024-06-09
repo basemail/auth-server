@@ -2,11 +2,6 @@
 
 use super::auth::*;
 use super::config::Config;
-use super::database::{
-    auth::query::{get_nonce, get_refresh_token, insert_nonce, insert_refresh_token},
-    chains::query::get_chain,
-    domains::is_domain_supported,
-};
 use super::utils::get_environment_variable;
 use actix_web::{
     error, get,
@@ -14,6 +9,11 @@ use actix_web::{
     post,
     web::{Data, Json},
     Error, HttpResponse,
+};
+use database::{
+    auth::query::{get_nonce, get_refresh_token, insert_nonce, insert_refresh_token},
+    chains::query::get_chain,
+    domains::is_domain_supported,
 };
 use ethers::{
     providers::{Http, Provider},

@@ -6,40 +6,40 @@ use mongodb::{
     Client, Collection,
 };
 
-// // Insert new chain info
-// pub async fn insert_chain(
-//     client: &Client,
-//     database: &str,
-//     chain_id: &u64,
-//     http_rpc_url: &str,
-//     ws_rpc_url: &str,
-// ) -> Result<(), &'static str> {
-//     let collection: Collection<ChainModel> = client.database(database).collection("chains");
+// Insert new chain info
+pub async fn insert_chain(
+    client: &Client,
+    database: &str,
+    chain_id: &u64,
+    http_rpc_url: &str,
+    ws_rpc_url: &str,
+) -> Result<(), &'static str> {
+    let collection: Collection<ChainModel> = client.database(database).collection("chains");
 
-//     let chain_model = ChainModel {
-//         chain_id: *chain_id,
-//         http_rpc_url: http_rpc_url.to_string(),
-//         ws_rpc_url: ws_rpc_url.to_string(),
-//     };
+    let chain_model = ChainModel {
+        chain_id: *chain_id,
+        http_rpc_url: http_rpc_url.to_string(),
+        ws_rpc_url: ws_rpc_url.to_string(),
+    };
 
-//     // Check if chain already exists
-//     match collection
-//         .find_one(doc! { "chain_id": to_bson(chain_id).unwrap() }, None)
-//         .await
-//     {
-//         Ok(Some(_)) => return Err("Chain already exists in database."),
-//         Ok(None) => (),
-//         Err(_) => return Err("Failed to check if chain exists in database"),
-//     }
+    // Check if chain already exists
+    match collection
+        .find_one(doc! { "chain_id": to_bson(chain_id).unwrap() }, None)
+        .await
+    {
+        Ok(Some(_)) => return Err("Chain already exists in database."),
+        Ok(None) => (),
+        Err(_) => return Err("Failed to check if chain exists in database"),
+    }
 
-//     // Insert new chain
-//     let result = collection.insert_one(chain_model, None).await;
+    // Insert new chain
+    let result = collection.insert_one(chain_model, None).await;
 
-//     match result {
-//         Ok(_) => Ok(()),
-//         Err(_) => Err("Failed to insert chain into database"),
-//     }
-// }
+    match result {
+        Ok(_) => Ok(()),
+        Err(_) => Err("Failed to insert chain into database"),
+    }
+}
 
 // // Remove chain
 // pub async fn delete_chain(
@@ -103,24 +103,24 @@ use mongodb::{
 //     }
 // }
 
-// // Check if chain exists
-// pub async fn does_chain_exist(
-//     client: &Client,
-//     database: &str,
-//     chain_id: &u64,
-// ) -> Result<bool, &'static str> {
-//     let collection: Collection<ChainModel> = client.database(database).collection("chains");
+// Check if chain exists
+pub async fn does_chain_exist(
+    client: &Client,
+    database: &str,
+    chain_id: &u64,
+) -> Result<bool, &'static str> {
+    let collection: Collection<ChainModel> = client.database(database).collection("chains");
 
-//     let result = collection
-//         .find_one(doc! { "chain_id": to_bson(chain_id).unwrap() }, None)
-//         .await;
+    let result = collection
+        .find_one(doc! { "chain_id": to_bson(chain_id).unwrap() }, None)
+        .await;
 
-//     match result {
-//         Ok(Some(_)) => Ok(true),
-//         Ok(None) => Ok(false),
-//         Err(_) => Err("Failed to get chain from database"),
-//     }
-// }
+    match result {
+        Ok(Some(_)) => Ok(true),
+        Ok(None) => Ok(false),
+        Err(_) => Err("Failed to get chain from database"),
+    }
+}
 
 pub async fn get_chain(
     client: &Client,

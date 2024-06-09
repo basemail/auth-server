@@ -25,3 +25,16 @@ pub async fn is_domain_supported(
         Err(_) => Err("Failed to check if domain is supported in database"),
     }
 }
+
+pub async fn insert_domain(
+    client: &Client,
+    database: &str,
+    domain: &Authority,
+) -> Result<(), &'static str> {
+    let collection: Collection<String> = client.database(database).collection("domains");
+
+    match collection.insert_one(domain.to_string(), None).await {
+        Ok(_) => Ok(()),
+        Err(_) => Err("Failed to insert domain into database"),
+    }
+}

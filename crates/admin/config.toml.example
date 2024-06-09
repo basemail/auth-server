@@ -1,0 +1,38 @@
+# Configuration File for Admin Scripts
+
+# Define chains and attributes to be used in a given environment
+
+[chains]
+
+[chains.local]
+
+[chains.local.anvil]
+chain_id = 31337
+http_rpc_url = "http://localhost:8545"
+ws_rpc_url = "ws://localhost:8546"
+
+[chains.test]
+
+[chains.test.base-sepolia]
+chain_id = 
+http_rpc_url = 
+ws_rpc_url = 
+
+[chains.prod]
+
+[chains.prod.base]
+chain_id =
+http_rpc_url =
+ws_rpc_url =
+
+[domains]
+
+[domains.local]
+web-client = "http://localhost:3000"
+
+[domains.test]
+web-client = "https://test.app.xyz"
+
+[domains.prod]
+web-client = "https://app.xyz"
+

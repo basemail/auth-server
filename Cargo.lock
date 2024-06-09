@@ -246,6 +246,23 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f26201604c87b1e01bd3d98f8d5d9a8fcbb815e8cedb41ffccbeb4bf593a35fe"
 
 [[package]]
+name = "admin"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "database",
+ "dotenvy",
+ "ethers",
+ "http 1.1.0",
+ "mongodb",
+ "serde",
+ "tokio",
+ "toml 0.5.11",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "aes"
 version = "0.8.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -358,6 +375,34 @@ dependencies = [
 ]
 
 [[package]]
+name = "api"
+version = "0.1.0"
+dependencies = [
+ "actix-cors",
+ "actix-web",
+ "chrono",
+ "clap",
+ "database",
+ "dotenvy",
+ "ethers",
+ "futures",
+ "http 1.1.0",
+ "jsonwebtoken",
+ "mime",
+ "mongodb",
+ "serde",
+ "serde_json",
+ "siwe",
+ "tokio",
+ "tracing",
+ "tracing-actix-web",
+ "tracing-log 0.1.4",
+ "tracing-subscriber",
+ "url",
+ "uuid 1.8.0",
+]
+
+[[package]]
 name = "arrayvec"
 version = "0.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -392,33 +437,6 @@ dependencies = [
  "futures",
  "pharos",
  "rustc_version 0.4.0",
-]
-
-[[package]]
-name = "auth-server"
-version = "0.1.0"
-dependencies = [
- "actix-cors",
- "actix-web",
- "chrono",
- "clap",
- "dotenvy",
- "ethers",
- "futures",
- "http 1.1.0",
- "jsonwebtoken",
- "mime",
- "mongodb",
- "serde",
- "serde_json",
- "siwe",
- "tokio",
- "tracing",
- "tracing-actix-web",
- "tracing-log 0.1.4",
- "tracing-subscriber",
- "url",
- "uuid 1.8.0",
 ]
 
 [[package]]
@@ -997,6 +1015,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e8566979429cf69b49a5c740c60791108e86440e8be149bbea4fe54d2c32d6e2"
 
 [[package]]
+name = "database"
+version = "0.1.0"
+dependencies = [
+ "http 1.1.0",
+ "mongodb",
+ "serde",
+]
+
+[[package]]
 name = "der"
 version = "0.7.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1345,7 +1372,7 @@ dependencies = [
  "serde",
  "serde_json",
  "syn 2.0.66",
- "toml",
+ "toml 0.8.14",
  "walkdir",
 ]
 
@@ -4002,6 +4029,15 @@ dependencies = [
  "futures-sink",
  "pin-project-lite",
  "tokio",
+]
+
+[[package]]
+name = "toml"
+version = "0.5.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f4f7f0dd8d50a853a531c426359045b1998f04219d88799810762cd4ad314234"
+dependencies = [
+ "serde",
 ]
 
 [[package]]
