@@ -40,8 +40,7 @@ impl FromRequest for SiweUser {
         let addr = req.match_info().query("address").parse::<String>().unwrap();
         debug!("FromRequest for SiweUser - parsed address: {}", &addr);
 
-        let res: Result<String, Error> = 
-        if addr.is_empty() {
+        let res: Result<String, Error> = if addr.is_empty() {
             Err(ErrorBadRequest("Address not found"))
         } else {
             debug!("Checking authorization...");

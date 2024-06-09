@@ -6,4 +6,5 @@ use mongodb::Client;
 pub struct Config {
     pub client: Client,
     pub database: String,
+    pub chains: Vec<u64>,
 }

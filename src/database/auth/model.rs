@@ -1,4 +1,4 @@
-// database/model.rs - Models for the sign in request nonce and refresh token
+// database/auth/model.rs - Models for the sign in request nonce and refresh token
 
 use mongodb::bson::DateTime;
 use serde::{Deserialize, Serialize};

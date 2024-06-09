@@ -2,7 +2,9 @@
 
 use super::auth::*;
 use super::config::Config;
-use super::database::query::{get_nonce, get_refresh_token, insert_nonce, insert_refresh_token};
+use super::database::auth::query::{
+    get_nonce, get_refresh_token, insert_nonce, insert_refresh_token,
+};
 use super::utils::get_environment_variable;
 use actix_web::{
     error, get,

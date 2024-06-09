@@ -1,4 +1,4 @@
-// database/query.rs - Database queries for the defined models
+// database/auth/query.rs - Database queries for the defined auth models
 
 use super::model::{NonceModel, RefreshTokenModel};
 use mongodb::bson::{doc, DateTime};
