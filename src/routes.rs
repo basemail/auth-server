@@ -2,8 +2,10 @@
 
 use super::auth::*;
 use super::config::Config;
-use super::database::auth::query::{
-    get_nonce, get_refresh_token, insert_nonce, insert_refresh_token,
+use super::database::{
+    auth::query::{get_nonce, get_refresh_token, insert_nonce, insert_refresh_token},
+    chains::query::get_chain,
+    domains::is_domain_supported,
 };
 use super::utils::get_environment_variable;
 use actix_web::{
@@ -13,7 +15,10 @@ use actix_web::{
     web::{Data, Json},
     Error, HttpResponse,
 };
-use ethers::types::Signature;
+use ethers::{
+    providers::{Http, Provider},
+    types::Signature,
+};
 use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
 use serde::Serialize;
 use siwe::{eip55, generate_nonce, Message, VerificationOpts};
@@ -99,11 +104,44 @@ pub async fn sign_in(
             }
         };
 
+    // Check that the domain of the message is supported
+    match is_domain_supported(&config.client, &config.database, &message.domain).await {
+        Ok(true) => {}
+        Ok(false) => {
+            warn!("Domain is not supported: {}", message.domain);
+            return Err(error::ErrorBadRequest("Unsupported domain"));
+        }
+        Err(e) => {
+            error!("Error checking domain: {}", e);
+            return Err(error::ErrorInternalServerError("Internal Server Error"));
+        }
+    }
+
+    // Check that the chain_id is supported and load the chain data
+    let chain = match get_chain(&config.client, &config.database, &message.chain_id).await {
+        Ok(chain) => chain,
+        Err(e) => {
+            error!("Error getting chain from DB: {}", e);
+            return Err(error::ErrorInternalServerError("Internal Server Error"));
+        }
+    };
+
+    // Create a provider for the chain to be able to verify contract (eip 1271) signatures
+    let provider = match Provider::<Http>::try_from(chain.http_rpc_url.as_str()) {
+        Ok(provider) => provider,
+        Err(e) => {
+            error!("Error creating provider: {}", e);
+            return Err(error::ErrorInternalServerError("Internal Server Error"));
+        }
+    };
+
     // Create verification options for the siwe verify transaction, confirming the correct nonce
     debug!("Verifying user signature.");
     let verification_opts = VerificationOpts {
+        domain: Some(message.domain.clone()),
         nonce: Some(message.nonce.clone()),
-        ..Default::default()
+        rpc_provider: Some(provider),
+        timestamp: None,
     };
 
     // Return error if nonce does not match

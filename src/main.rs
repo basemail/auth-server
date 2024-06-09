@@ -20,7 +20,6 @@ use config::Config;
 use database::{
     auth::model::{NonceModel, RefreshTokenModel},
     auth::set_ttl_index,
-    chains::query::get_all_chain_ids,
 };
 use routes::{nonce, refresh, sign_in};
 
@@ -76,17 +75,10 @@ async fn main() -> std::io::Result<()> {
 
     set_ttl_index(invalid_refresh_tokens_collection, 86400).await;
 
-    // Load the supported chains
-    let chain_ids = match get_all_chain_ids(&client, &args.database_name).await {
-        Ok(chain_ids) => chain_ids,
-        Err(e) => panic!("Failed to get chain ids: {}", e),
-    };
-
     // Set api config
     let config = Config {
         client: client.clone(),
         database: args.database_name.clone(),
-        chains: chain_ids,
     };
 
     // Set default JSON config
