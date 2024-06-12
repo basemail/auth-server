@@ -20,7 +20,7 @@ use database::{
     auth::model::{NonceModel, RefreshTokenModel},
     auth::set_ttl_index,
 };
-use routes::{nonce, refresh, sign_in};
+use routes::{nonce, refresh, sign_in, validate};
 
 #[derive(Parser, Debug)]
 struct Args {
@@ -114,6 +114,7 @@ async fn main() -> std::io::Result<()> {
             .service(nonce)
             .service(sign_in)
             .service(refresh)
+            .service(validate)
     })
     .bind(binding)?
     .run()

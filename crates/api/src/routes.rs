@@ -12,7 +12,7 @@ use actix_web::{
 };
 use database::{
     auth::query::{get_nonce, get_refresh_token, insert_nonce, insert_refresh_token},
-    chains::query::get_chain,
+    chains::query::{does_chain_exist, get_chain},
     domains::is_domain_supported,
 };
 use ethers::{
@@ -20,7 +20,7 @@ use ethers::{
     types::Signature,
 };
 use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use siwe::{eip55, generate_nonce, Message, VerificationOpts};
 use std::str::FromStr;
 use tracing::{debug, error, info, warn};
@@ -304,4 +304,89 @@ pub async fn refresh(config: Data<Config>, req_data: Json<String>) -> Result<Htt
 
     info!("User refresh succeeded.");
     Ok(HttpResponse::Ok().body(body))
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct ValidateData {
+    pub chain_id: u64,
+    pub address: String,
+    pub access_token: String,
+}
+
+#[tracing::instrument(
+    name = "/validate - Verifies an access token is valid as well as matches the address and chain id provided.",
+    skip(config)
+)]
+#[get("/validate/")]
+pub async fn validate(
+    config: Data<Config>,
+    req_data: Json<ValidateData>,
+) -> Result<HttpResponse, Error> {
+    let validate_data = req_data.into_inner();
+    let token_string = validate_data.access_token;
+    let address = validate_data.address;
+    let chain_id = validate_data.chain_id;
+
+    let jwt_secret = get_environment_variable("JWT_SECRET".to_string());
+
+    if jwt_secret.is_err() {
+        error!("Error getting JWT_SECRET: {}", jwt_secret.err().unwrap());
+        return Err(error::ErrorInternalServerError("Internal Server Error"));
+    }
+    let jwt_secret = jwt_secret.unwrap();
+
+    debug!("Setting validation requirements...");
+    // Validate the token
+    let mut validation = Validation::new(Algorithm::HS512);
+    validation.set_required_spec_claims(&["sub", "exp"]);
+
+    debug!("Decoding access token...");
+    let claims = match decode::<Claims>(
+        &token_string,
+        &DecodingKey::from_secret(jwt_secret.as_ref()),
+        &validation,
+    ) {
+        Ok(token_data) => {
+            debug!("Access token successfully decoded");
+            token_data.claims
+        }
+        Err(e) => {
+            error!(
+                "Validation failed for access token {} Error: {}",
+                &token_string,
+                e.to_string()
+            );
+            return Err(error::ErrorBadRequest("Invalid Access Token"));
+        }
+    };
+
+    // Validate the token has not expired
+    let now = chrono::Utc::now().timestamp() as usize;
+    if now > claims.exp {
+        warn!("Access token has expired.");
+        return Err(error::ErrorBadRequest("Expired Access Token"));
+    }
+
+    // Validate the address matches the token, if not return false
+    if claims.sub != address {
+        warn!("Address does not match token.");
+        return Err(error::ErrorBadRequest("Address does not match token"));
+    }
+
+    // Validate the chain is supported, if not return false
+    match does_chain_exist(&config.client, &config.database, &chain_id).await {
+        Ok(true) => {}
+        Ok(false) => {
+            warn!("Chain is not supported: {}", chain_id);
+            return Err(error::ErrorBadRequest("Unsupported chain"));
+        }
+        Err(e) => {
+            error!("Error checking chain: {}", e);
+            return Err(error::ErrorInternalServerError("Internal Server Error"));
+        }
+    }
+
+    // Return true if all checks pass
+    info!("User validated: {}", address);
+    Ok(HttpResponse::Ok().body("valid"))
 }
