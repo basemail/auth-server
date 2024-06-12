@@ -12,7 +12,7 @@ use actix_web::{
 };
 use database::{
     auth::query::{get_nonce, get_refresh_token, insert_nonce, insert_refresh_token},
-    chains::query::get_chain,
+    chains::query::{does_chain_exist, get_chain},
     domains::is_domain_supported,
 };
 use ethers::{
@@ -20,7 +20,7 @@ use ethers::{
     types::Signature,
 };
 use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use siwe::{eip55, generate_nonce, Message, VerificationOpts};
 use std::str::FromStr;
 use tracing::{debug, error, info, warn};
@@ -306,16 +306,26 @@ pub async fn refresh(config: Data<Config>, req_data: Json<String>) -> Result<Htt
     Ok(HttpResponse::Ok().body(body))
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+struct ValidateData {
+    pub chain_id: u64,
+    pub address: String,
+    pub access_token: String,
+}
+
 #[tracing::instrument(
-    name = "/validate - Verifies an access token was issued by this service and returns the address",
-    skip(_config)
+    name = "/validate - Verifies an access token is valid as well as matches the address and chain id provided.",
+    skip(config)
 )]
 #[get("/validate/")]
 pub async fn validate(
-    _config: Data<Config>,
-    access_token: Json<String>,
+    config: Data<Config>,
+    req_data: Json<ValidateData>,
 ) -> Result<HttpResponse, Error> {
-    let token_string: String = access_token.to_string();
+    let validate_data = req_data.into_inner();
+    let token_string = validate_data.access_token;
+    let address = validate_data.address;
+    let chain_id = validate_data.chain_id;
 
     let jwt_secret = get_environment_variable("JWT_SECRET".to_string());
 
@@ -326,12 +336,9 @@ pub async fn validate(
     let jwt_secret = jwt_secret.unwrap();
 
     debug!("Setting validation requirements...");
-    let validation = Validation::new(Algorithm::HS512);
-    // TODO add issuer claim to the tokens and validate this for extra security?
-
-    // TODO check that the nonce for the token is in the database
-
-    // TODO check that the chain is supported and matches the one sent by the caller
+    // Validate the token
+    let mut validation = Validation::new(Algorithm::HS512);
+    validation.set_required_spec_claims(&["sub", "exp"]);
 
     debug!("Decoding access token...");
     let claims = match decode::<Claims>(
@@ -360,17 +367,26 @@ pub async fn validate(
         return Err(error::ErrorBadRequest("Expired Access Token"));
     }
 
-    let address = claims.sub;
+    // Validate the address matches the token, if not return false
+    if claims.sub != address {
+        warn!("Address does not match token.");
+        return Ok(HttpResponse::Ok().body("false"));
+    }
 
-    let body = match serde_json::to_string(&address) {
-        Ok(body) => body,
-        Err(_) => {
-            return Err(error::ErrorInternalServerError(
-                "Failed to serialize response.",
-            ))
+    // Validate the chain is supported, if not return false
+    match does_chain_exist(&config.client, &config.database, &chain_id).await {
+        Ok(true) => {}
+        Ok(false) => {
+            warn!("Chain is not supported: {}", chain_id);
+            return Ok(HttpResponse::Ok().body("false"));
         }
-    };
+        Err(e) => {
+            error!("Error checking chain: {}", e);
+            return Err(error::ErrorInternalServerError("Internal Server Error"));
+        }
+    }
 
+    // Return true if all checks pass
     info!("User validated: {}", address);
-    Ok(HttpResponse::Ok().body(body))
+    Ok(HttpResponse::Ok().body("true"))
 }
