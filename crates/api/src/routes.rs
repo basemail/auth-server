@@ -370,7 +370,7 @@ pub async fn validate(
     // Validate the address matches the token, if not return false
     if claims.sub != address {
         warn!("Address does not match token.");
-        return Ok(HttpResponse::Ok().body("false"));
+        return Err(error::ErrorBadRequest("Address does not match token"));
     }
 
     // Validate the chain is supported, if not return false
@@ -378,7 +378,7 @@ pub async fn validate(
         Ok(true) => {}
         Ok(false) => {
             warn!("Chain is not supported: {}", chain_id);
-            return Ok(HttpResponse::Ok().body("false"));
+            return Err(error::ErrorBadRequest("Unsupported chain"));
         }
         Err(e) => {
             error!("Error checking chain: {}", e);
@@ -388,5 +388,5 @@ pub async fn validate(
 
     // Return true if all checks pass
     info!("User validated: {}", address);
-    Ok(HttpResponse::Ok().body("true"))
+    Ok(HttpResponse::Ok().body("valid"))
 }
