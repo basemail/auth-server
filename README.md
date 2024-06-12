@@ -1,6 +1,6 @@
 # SIWE Authentication Server
 
-Basic authentication server that provides JWT access tokens for signed in users. Integrating systems need to reference the same database to validate tokens.
+Basic authentication server that provides JWT access tokens for signed in users. Integrating systems can query the validate route to check tokens.
 
 ## Stack
 
