@@ -66,13 +66,46 @@ paths:
           description: Bad Request - refresh token provided is not valid.
         500:
           description: Error refreshing tokens.
+  /validate:
+    get:
+      summary: Validates an access token.
+      tags: [Authentication]
+      responses:
+        200:
+          description: Validation successful. User is valid.
+        400:
+          description: Bad Request - access token is invalid.
+        500:
+          description: Error validating access token.
+
 components:
   schemas:
     JWTPair:
       description: A JSON object containing two string fields, access_token and refresh_token.
-      type: string
+      type: object
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
     SigninData:
       description: A JSON object containing two string fields, a Sign in With Ethereum message and signature. The nonce found in the decoded signature should match the nonce in the message.
+      type: object
+      properties:
+        message:
+          type: string
+        signature:
+          type: string
+    ValidateData:
+      description: A JSON object containing two string fields and one number field, an access token, an address, and a chain ID.
+      type: object
+      properties:
+        access_token:
+          type: string
+        address:
+          type: string
+        chain_id:
+          type: number
   securitySchemes:
     JWTAuthorization:
       name: Authorization
