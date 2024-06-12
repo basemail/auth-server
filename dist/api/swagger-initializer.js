@@ -103,16 +103,65 @@ const api = {
         "summary" : "Checks a provided refresh token, returns a new access token and refresh token.",
         "tags" : [ "Authentication" ]
       }
+    },
+    "/validate" : {
+      "get" : {
+        "responses" : {
+          "200" : {
+            "description" : "Validation successful. User is valid."
+          },
+          "400" : {
+            "description" : "Bad Request - access token is invalid."
+          },
+          "500" : {
+            "description" : "Error validating access token."
+          }
+        },
+        "summary" : "Validates an access token.",
+        "tags" : [ "Authentication" ]
+      }
     }
   },
   "components" : {
     "schemas" : {
       "JWTPair" : {
         "description" : "A JSON object containing two string fields, access_token and refresh_token.",
-        "type" : "string"
+        "properties" : {
+          "access_token" : {
+            "type" : "string"
+          },
+          "refresh_token" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
       },
       "SigninData" : {
-        "description" : "A JSON object containing two string fields, a Sign in With Ethereum message and signature. The nonce found in the decoded signature should match the nonce in the message."
+        "description" : "A JSON object containing two string fields, a Sign in With Ethereum message and signature. The nonce found in the decoded signature should match the nonce in the message.",
+        "properties" : {
+          "message" : {
+            "type" : "string"
+          },
+          "signature" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "ValidateData" : {
+        "description" : "A JSON object containing two string fields and one number field, an access token, an address, and a chain ID.",
+        "properties" : {
+          "access_token" : {
+            "type" : "string"
+          },
+          "address" : {
+            "type" : "string"
+          },
+          "chain_id" : {
+            "type" : "number"
+          }
+        },
+        "type" : "object"
       }
     },
     "securitySchemes" : {
