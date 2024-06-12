@@ -305,3 +305,72 @@ pub async fn refresh(config: Data<Config>, req_data: Json<String>) -> Result<Htt
     info!("User refresh succeeded.");
     Ok(HttpResponse::Ok().body(body))
 }
+
+#[tracing::instrument(
+    name = "/validate - Verifies an access token was issued by this service and returns the address",
+    skip(_config)
+)]
+#[get("/validate/")]
+pub async fn validate(
+    _config: Data<Config>,
+    access_token: Json<String>,
+) -> Result<HttpResponse, Error> {
+    let token_string: String = access_token.to_string();
+
+    let jwt_secret = get_environment_variable("JWT_SECRET".to_string());
+
+    if jwt_secret.is_err() {
+        error!("Error getting JWT_SECRET: {}", jwt_secret.err().unwrap());
+        return Err(error::ErrorInternalServerError("Internal Server Error"));
+    }
+    let jwt_secret = jwt_secret.unwrap();
+
+    debug!("Setting validation requirements...");
+    let validation = Validation::new(Algorithm::HS512);
+    // TODO add issuer claim to the tokens and validate this for extra security?
+
+    // TODO check that the nonce for the token is in the database
+
+    // TODO check that the chain is supported and matches the one sent by the caller
+
+    debug!("Decoding access token...");
+    let claims = match decode::<Claims>(
+        &token_string,
+        &DecodingKey::from_secret(jwt_secret.as_ref()),
+        &validation,
+    ) {
+        Ok(token_data) => {
+            debug!("Access token successfully decoded");
+            token_data.claims
+        }
+        Err(e) => {
+            error!(
+                "Validation failed for access token {} Error: {}",
+                &token_string,
+                e.to_string()
+            );
+            return Err(error::ErrorBadRequest("Invalid Access Token"));
+        }
+    };
+
+    // Validate the token has not expired
+    let now = chrono::Utc::now().timestamp() as usize;
+    if now > claims.exp {
+        warn!("Access token has expired.");
+        return Err(error::ErrorBadRequest("Expired Access Token"));
+    }
+
+    let address = claims.sub;
+
+    let body = match serde_json::to_string(&address) {
+        Ok(body) => body,
+        Err(_) => {
+            return Err(error::ErrorInternalServerError(
+                "Failed to serialize response.",
+            ))
+        }
+    };
+
+    info!("User validated: {}", address);
+    Ok(HttpResponse::Ok().body(body))
+}
