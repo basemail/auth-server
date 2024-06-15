@@ -4,25 +4,22 @@ use super::auth::*;
 use super::config::Config;
 use super::utils::get_environment_variable;
 use actix_web::{
-    error, get,
-    http::header::ContentType,
-    post,
+    error, get, post,
     web::{Data, Json},
     Error, HttpResponse,
 };
 use database::{
     auth::query::{get_nonce, get_refresh_token, insert_nonce, insert_refresh_token},
     chains::query::{does_chain_exist, get_chain},
-    domains::is_domain_supported,
+    domains::query::is_domain_supported,
 };
 use ethers::{
     providers::{Http, Provider},
-    types::Signature,
+    utils::hex,
 };
 use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
 use serde::{Deserialize, Serialize};
-use siwe::{eip55, generate_nonce, Message, VerificationOpts};
-use std::str::FromStr;
+use siwe::{eip55, generate_nonce, Message};
 use tracing::{debug, error, info, warn};
 
 #[tracing::instrument(
@@ -42,9 +39,7 @@ pub async fn nonce(config: Data<Config>) -> Result<HttpResponse, Error> {
     match result {
         Ok(_) => {
             debug!("Nonce successfully inserted");
-            Ok(HttpResponse::Ok()
-                .content_type(ContentType::json())
-                .body(nonce))
+            Ok(HttpResponse::Ok().body(nonce))
         }
         Err(e) => {
             error!("{}", e);
@@ -69,6 +64,7 @@ pub async fn sign_in(
     config: Data<Config>,
     req_data: Json<SigninData>,
 ) -> Result<HttpResponse, Error> {
+    // println!("message: {:?}", req_data.message);
     let message: Message = match req_data.message.as_str().parse() {
         Ok(message) => message,
         Err(e) => {
@@ -77,7 +73,9 @@ pub async fn sign_in(
         }
     };
     let address = eip55(&message.address);
-    let signature: Signature = match Signature::from_str(&req_data.signature) {
+
+    // Parse to just a bytes array instead of the signature type since it could be something other than an ECDSA signature
+    let signature = match hex::decode(&req_data.signature) {
         Ok(signature) => signature,
         Err(e) => {
             error!("Error parsing signature: {}", e);
@@ -135,21 +133,14 @@ pub async fn sign_in(
         }
     };
 
-    // Create verification options for the siwe verify transaction, confirming the correct nonce
     debug!("Verifying user signature.");
-    let verification_opts = VerificationOpts {
-        domain: Some(message.domain.clone()),
-        nonce: Some(message.nonce.clone()),
-        rpc_provider: Some(provider),
-        timestamp: None,
-    };
 
-    // Return error if nonce does not match
-    if let Err(_e) = message
-        .verify(signature.to_vec().as_slice(), &verification_opts)
+    // Verify the signature using the eip1271 standard
+    if let Err(e) = message
+        .verify_eip1271(signature.as_slice(), &provider)
         .await
     {
-        warn!("Could not verify signature.");
+        warn!("Could not verify signature. {}", e);
         return Err(error::ErrorBadRequest("Could not verify signature"));
     }
     debug!("Signature verified.");

@@ -6,7 +6,7 @@ use database::{
         model::create_chain_index,
         query::{does_chain_exist, insert_chain},
     },
-    domains::insert_domain,
+    domains::query::insert_domain,
 };
 use dotenvy::dotenv;
 use http::uri::Authority;

@@ -1,5 +1,6 @@
-// database/domains.rs - query abstractions for the domains collection
+// database/domains/query.rs - query abstractions for the domains collection
 
+use super::model::DomainModel;
 use http::uri::Authority;
 use mongodb::{
     bson::{doc, to_bson},
@@ -11,7 +12,7 @@ pub async fn is_domain_supported(
     database: &str,
     domain: &Authority,
 ) -> Result<bool, &'static str> {
-    let collection: Collection<String> = client.database(database).collection("domains");
+    let collection: Collection<DomainModel> = client.database(database).collection("domains");
 
     match collection
         .find_one(
@@ -31,9 +32,13 @@ pub async fn insert_domain(
     database: &str,
     domain: &Authority,
 ) -> Result<(), &'static str> {
-    let collection: Collection<String> = client.database(database).collection("domains");
+    let collection: Collection<DomainModel> = client.database(database).collection("domains");
 
-    match collection.insert_one(domain.to_string(), None).await {
+    let dom = DomainModel {
+        domain: domain.to_string(),
+    };
+
+    match collection.insert_one(dom, None).await {
         Ok(_) => Ok(()),
         Err(_) => Err("Failed to insert domain into database"),
     }
