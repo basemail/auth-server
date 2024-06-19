@@ -28,7 +28,7 @@ ws_rpc_url = ""
 [domains]
 
 [domains.local]
-web-client = "http://localhost:3000"
+web-client = "localhost:3000"
 
 [domains.test]
 web-client = "basechain.email"
