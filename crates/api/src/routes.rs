@@ -308,7 +308,7 @@ struct ValidateData {
     name = "/validate - Verifies an access token is valid as well as matches the address and chain id provided.",
     skip(config)
 )]
-#[get("/validate/")]
+#[post("/validate")]
 pub async fn validate(
     config: Data<Config>,
     req_data: Json<ValidateData>,
