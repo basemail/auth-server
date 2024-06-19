@@ -93,16 +93,12 @@ async fn main() -> std::io::Result<()> {
         let cors = match args.environment.as_str() {
             "local" => Cors::permissive(),
             "testnet" => Cors::default()
-                .allowed_origin("https://testnet.basechain.email")
                 .allowed_methods(vec!["GET", "POST"])
                 .allow_any_header()
-                .supports_credentials()
                 .max_age(3600),
             "production" => Cors::default()
-                .allowed_origin("https://basechain.email")
                 .allowed_methods(vec!["GET", "POST"])
                 .allow_any_header()
-                .supports_credentials()
                 .max_age(3600),
             _ => panic!("Invalid environment"),
         };
