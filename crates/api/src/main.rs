@@ -92,11 +92,11 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         let cors = match args.environment.as_str() {
             "local" => Cors::permissive(),
-            "testnet" => Cors::default()
+            "test" => Cors::default()
                 .allowed_methods(vec!["GET", "POST"])
                 .allow_any_header()
                 .max_age(3600),
-            "production" => Cors::default()
+            "prod" => Cors::default()
                 .allowed_methods(vec!["GET", "POST"])
                 .allow_any_header()
                 .max_age(3600),
