@@ -84,11 +84,7 @@ async fn main() -> std::io::Result<()> {
     let json_cfg = web::JsonConfig::default();
 
     // Create and run http server
-    let binding = if args.environment.as_str() == "local" {
-        ("127.0.0.1", 8081)
-    } else {
-        ("0.0.0.0", 10000)
-    };
+    let binding = ("0.0.0.0", 8081);
     HttpServer::new(move || {
         let cors = match args.environment.as_str() {
             "local" => Cors::permissive(),
