@@ -64,7 +64,6 @@ pub async fn sign_in(
     config: Data<Config>,
     req_data: Json<SigninData>,
 ) -> Result<HttpResponse, Error> {
-    // println!("message: {:?}", req_data.message);
     let message: Message = match req_data.message.as_str().parse() {
         Ok(message) => message,
         Err(e) => {
@@ -359,7 +358,8 @@ pub async fn validate(
     }
 
     // Validate the address matches the token, if not return false
-    if claims.sub != address {
+    // We use to_ascii_lowercase to ensure the comparison is case-insensitive
+    if claims.sub.to_ascii_lowercase() != address.to_ascii_lowercase() {
         warn!("Address does not match token.");
         return Err(error::ErrorBadRequest("Address does not match token"));
     }
